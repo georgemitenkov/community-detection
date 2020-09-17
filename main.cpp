@@ -96,7 +96,6 @@ public:
   }
 
   int degree(int v) {
-    assert(v >= 0 && v < V);
     if (v == 0)
       return degrees[0];
     return degrees[v] - degrees[v - 1];
@@ -104,8 +103,6 @@ public:
 
   pair<vector<int>::iterator, vector<int>::iterator>
   adjacent(int v) {
-  assert(v >= 0 && v < V);
-
   if (v == 0)
     return make_pair(edges.begin(), weights.begin());
   else if (weights.size() != 0)
@@ -115,7 +112,6 @@ public:
   }
 
   int selfLoops(int v) {
-    assert(v >= 0 && v < V);
     auto pointer = adjacent(v);
     for (int i = 0; i < degree(v); i++) {
       if (*(pointer.first + i) == v) {
@@ -129,8 +125,6 @@ public:
   }
 
   int weightedDegree(int v) {
-    assert(v >= 0 && v < V);
-
     if (weights.size() == 0) {
       return degree(v);
     } else {
@@ -204,14 +198,12 @@ public:
   }
 
   void remove(int vertex, int community, double edgesToCommunity) {
-    assert(vertex >= 0 && vertex < networkSize);
     eout[community] -= graph.weightedDegree(vertex);
     ein[community] -= 2 * edgesToCommunity + graph.selfLoops(vertex);
     vertexToCommunityMap[vertex] = -1;
   }
 
   void insert(int vertex, int community, int edgesToCommunity) {
-    assert(vertex >= 0 && vertex < networkSize);
     eout[community] += graph.weightedDegree(vertex);
     ein[community] += 2 * edgesToCommunity + graph.selfLoops(vertex);
     vertexToCommunityMap[vertex] = community;
@@ -243,14 +235,11 @@ public:
 
   // numEdges from v to community.
   double modularityGain(int v, int newCommunity, int numEdges, int degree) {
-    assert(v >= 0 && v < networkSize);
-
-    double totc = eout[newCommunity];
-    double degc = degree;
-    double m2 = graph.W;
-    double dnc = numEdges;
+    double eouts = eout[newCommunity];
+    double deg = degree;
+    double m = graph.W;
     
-    return (dnc - totc*degc/m2);
+    return ((double)numEdges - eouts * deg / m);
   }
 
   // Compute all adjacent communities
@@ -549,6 +538,7 @@ int main(int argc, char *argv[]) {
         communities[vertexToCommunity[v]].push_back(v);
       }
 
+      predQ = maxQ.second;
       best = communities;
     }
   }
