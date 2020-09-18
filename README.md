@@ -3,12 +3,27 @@ Louvain's community detection algorithm for big graphs
 
 ## The algorithm
 
-This is an implementation of Louvain's algorithm based on the [Fast unfolding of communities in large networks](https://arxiv.org/abs/0803.0476) paper.
+This is a slight modification of Louvain's algorithm based on the [Fast unfolding of communities in large networks](https://arxiv.org/abs/0803.0476) paper.
 For optimizitaion, a metric Q is used.
 ```
 Q = modularity(C) + regularization(C), where C = # of communities
 ```
-When testing, a value of Q = 2.637893 was achieved.
+The algorithm has the following structure:
+```
+> Generate `REPS` partitions, for each:
+>   while there is an improvement of modularity:
+>     Phase1: optimize modularity greedily (with a probability of 1/3 that only c changes are made).
+>     Phase2: reconstruct the graph as described in the paper.
+>     Save the value of Q and the partition.
+>   Pick the partition for the best Q.
+> Pick the partition that gives the best Q.
+```
+The idea behind the use of `MAX_STEPS` for modularity optimization, is that combining  too many communities
+is penalized by regularization. This is a particular case when clear communities are presented in the graph.
+In order to prevent us from "overoptimizing" modularity (at the expense of regularization) and "overcombining" communities,
+less steps are taken for the phase 1.
+
+When testing and tuning `REPS` and `MAX_STEPS`, a value of Q = 2.722822 was achieved.
 
 ### What is done and what could have been done
 - [x] **Speed**
@@ -19,7 +34,7 @@ When testing, a value of Q = 2.637893 was achieved.
 - [x] **Randomization and maximizing**
       
       In order to obtain better results, the vertices selection is randomized. This gives a significant increase in Q
-      (around 0.2-0.3 for some graphs). Also, the algorithm was executed a fixed number of times. Therefore, we are
+      (around 0.2-0.3 for some graphs). Also, the algorithm is executed a fixed number of times. Therefore, we are
       able to pick the best result from the randomly formed partitions.
 
 - [ ] **Style**
