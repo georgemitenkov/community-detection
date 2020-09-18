@@ -8,7 +8,7 @@
 using namespace std;
 
 static const int REPS = 15;
-static const int MAX_STEPS = 10000;
+static const int MAX_STEPS = 20000;
 
 //============================================================================//
 // Initial graph G(V, E)
@@ -509,8 +509,6 @@ int main(int argc, char *argv[]) {
       c = Community(graph, V, communitySizes);
       newReg = c.regularization();
       Qs.push_back((newMod + newReg));
-
-      cout << "m: " << newMod << ", r = " << newReg << "\n";
     
       mod = newMod;
       reg = newReg;
@@ -521,8 +519,6 @@ int main(int argc, char *argv[]) {
       if (Qs[q] > maxQ.second)
         maxQ = {q, Qs[q]};
     }
-
-    cout << "Q max is: " << maxQ.second << "\n";
 
     if (maxQ.second > predQ) {
       vector<int> vertexToCommunity(V);
