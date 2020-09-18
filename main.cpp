@@ -8,7 +8,7 @@
 using namespace std;
 
 static const int REPS = 15;
-static const int MAX_STEPS = 60000;
+static const int MAX_STEPS = 10000;
 
 //============================================================================//
 // Initial graph G(V, E)
@@ -39,7 +39,8 @@ public:
 
   // DEBUG
   void print() {
-    cout << "Initial graph G(V: " << V << ", E: " << E << ") with adjacency list:\n";
+    cout << "Initial graph G(V: " << V << ", E: "
+         << E << ") with adjacency list:\n";
     for (int i = 0; i < V; i++) {
       cout << "("<< i << ") ";
       for (auto v : adj[i]) {
@@ -106,7 +107,8 @@ public:
   if (v == 0)
     return make_pair(edges.begin(), weights.begin());
   else if (weights.size() != 0)
-    return make_pair(edges.begin() + degrees[v - 1], weights.begin() + degrees[v - 1]);
+    return make_pair(edges.begin() + degrees[v - 1],
+                     weights.begin() + degrees[v - 1]);
   else
     return make_pair(edges.begin() + degrees[v - 1], weights.begin());
   }
@@ -212,8 +214,11 @@ public:
   double modularity() {
     double mod = 0.;
     for (int i = 0; i < networkSize; i++) {
-      if (eout[i] > 0)
-        mod += (double)ein[i]/(double)graph.W - ((double)eout[i]/(double)graph.W)*((double)eout[i]/(double)graph.W);
+      if (eout[i] > 0) {
+        mod += (double)ein[i] / (double)graph.W
+            - ((double)eout[i] / (double)graph.W)
+            * ((double)eout[i] / (double)graph.W);
+      }
     }
     return mod;
   }
@@ -242,7 +247,6 @@ public:
     return ((double)numEdges - eouts * deg / m);
   }
 
-  // Compute all adjacent communities
   void adjCommunities(int vertex) {
     for (int i = 0; i < adjLast ; i++)
       adjWeights[adjPositions[i]] = -1;
@@ -272,8 +276,8 @@ public:
     }
   }
 
-  bool phase1() {
-    bool improvement = false;
+  bool phase1(bool dontLimit) {
+    bool hasChanged = false;
     int moves;
     double newMod = modularity();
     double currentMod = newMod;
@@ -311,7 +315,6 @@ public:
             bestCommunity = adjPositions[j];
             bestNumEdges = adjWeights[adjPositions[j]];
             bestIncrease = increase;
-            counter++;
           }
         }
 
@@ -320,22 +323,17 @@ public:
         if (bestCommunity != vertexCommunity)
           moves++;
 
-      }
+        counter++;
 
-      // double totalEout = 0;
-      // double totalEin = 0;
-      // for (int i = 0; i < eout.size(); i++) {
-      //   totalEout += eout[i];
-      //   totalEin += ein[i];
-      // }
+      }
 
       newMod = modularity();
       if (moves > 0)
-        improvement = true;
+        hasChanged = true;
 
-    } while (counter < MAX_STEPS && moves > 0 && newMod > currentMod);
+    } while ((dontLimit || counter < MAX_STEPS) && moves > 0 && newMod > currentMod);
 
-    return improvement;
+    return hasChanged;
   }
 
   Graph phase2(vector<int> &communitySizes) {
@@ -493,10 +491,12 @@ int main(int argc, char *argv[]) {
     vector<double> Qs;
     vector<vector<int>> levels;
     srand((unsigned) time(0));
+
+    bool dontLimit = rand() % 3;
     do {
       
       // Phase 1: Modularity optimization.
-      hasChanged = c.phase1();
+      hasChanged = c.phase1(dontLimit);
       newMod = c.modularity();
 
       // Phase 2: Community aggregation.
@@ -509,6 +509,8 @@ int main(int argc, char *argv[]) {
       c = Community(graph, V, communitySizes);
       newReg = c.regularization();
       Qs.push_back((newMod + newReg));
+
+      cout << "m: " << newMod << ", r = " << newReg << "\n";
     
       mod = newMod;
       reg = newReg;
@@ -542,6 +544,8 @@ int main(int argc, char *argv[]) {
       best = communities;
     }
   }
+
+  cout << predQ << "\n";
 
   freopen("partition.graph", "w", stdout);
   for (auto c : best) {
